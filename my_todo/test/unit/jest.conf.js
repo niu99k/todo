@@ -1,6 +1,13 @@
 const path = require('path')
 
 module.exports = {
+  "jest": {
+    "verbose": true,
+    "testURL": "http://localhost/"
+  },
+  testEnvironment: 'jsdom',
+  verbose: true,
+  testURL: "http://localhost/",
   rootDir: path.resolve(__dirname, '../../'),
   moduleFileExtensions: [
     'js',
