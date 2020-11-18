@@ -8,7 +8,11 @@ import {
 
 let mock = new MockAdapter(axios); // 创建 MockAdapter 实例
 export default {
-  addOne() {
+  start() {
+    this.selectAllMenuInfo();
+    this.addOneMenuInfo();
+  },
+  addOneMenuInfo() {
     mock.onPost('/todo/addTodo').reply(config => {
       Todos.push({
         id: Mock.Random.guid(),
@@ -24,7 +28,7 @@ export default {
       });
     });
   },
-  selectAll() {
+  selectAllMenuInfo() {
     mock.onGet('/todo/list').reply(config => { //  config 指 前台传过来的值
       let mockTodo = Todos.map(todo => { // 重组 Todos数组，变成我们想要的数据
         return {
@@ -50,8 +54,16 @@ export default {
       });
     });
   },
-  start() {
-    this.selectAll();
-    this.addOne();
-  }
+  selectAllDetailsInfo() {
+    mock.onGet('/todo/listId').reply(config => {
+      let {id} = config.params;
+      let todoDetails = Todos.find(todo=>{return id && todo.id === id});
+      todo.cout=todo.record.filter(todo=>{return todo.check()===false}).length;
+    })
+    return new Promise(((resolve, reject) => {
+      setTimeout(()=>{
+        resolve([200,{todo:todo}]),200
+      })
+    }))
+  },
 }
