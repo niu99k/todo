@@ -1,7 +1,8 @@
 <template>
   <div class="page lists-show"><!--最外层容器-->
     <nav><!--容器上半部分-->
-      <div class="nav-group"> <!--移动端的菜单图标-->
+        <div class="nav-group" @click="$store.dispatch('updateMenu')" v-show="!isUpdate">
+        <!-- 在菜单的图标下面添加updateMenu时间，他可以直接调用vuex actions.js里面的updateMenu方法 --> <!--移动端的菜单图标-->
         <a class="nav-item">
           <span class="icon-list-unordered">
           </span>
@@ -40,34 +41,57 @@
 </template>
 <script>
 import item from './Item'
+import {detailsList, addOneTodoDetails} from "../api/api";
+import{Todos} from '@/mock/data/todoList'
 
+let todoId=''
 export default {
+  watch:{
+    "$route.params.id"(){
+      todoId=this.$route.params.id
+      this.initWithTodoId(todoId)
+    }
+  },
+  created() {
+    this.initWithTodoId(Todos[0].id)
+    console.log(this.items)
+  },
   components: {
     item
   },
   data() {
     return {
-      todo: { //详情内容
-        title: '星期一',
-        count: 12,
-        locked: false
+      todo: {
+        title: '星期一', // 标题
+        count: 12, // 数量
+        locked: false // 是否绑定
       },
-      items: [ //代办单项列表
-        {checked: false, text: '新的一天', isDelete: false},
-        {checked: false, text: '新的一天', isDelete: false},
-        {checked: false, text: '新的一天', isDelete: false}
+      items: [  // 代办单项列表
       ],
-      text: '' //新增代办单项绑定的值
-    }
+      text: '', // 用户输入单项项绑定的输入
+      isUpdate: false // 新增修改状态
+    };
   },
   methods: {
     onAdd() {
-      this.items.push({
-        checked: false,
-        text: this.text,
-        isDelete: false
-      }); // 当用户点击回车时候 ，给items的值新增一个对象，this.text 即输入框绑定的值
-      this.text = ''; //初始化输入框的值。
+      addOneTodoDetails({id:todoId,text:(this.text)}).then(res=>{
+        this.text=''
+        this.initWithTodoId(todoId)
+      })
+    },
+    initWithTodoId(todoId){
+      const todoDetailsId=todoId;
+      detailsList({id:todoDetailsId}).then(res=>{
+        let{id,title,count,isDeleted,locked,record}=res.data.todo;
+        this.items=record
+        this.todo={
+          id:id,
+          title:title,
+          count:count,
+          locked:locked,
+          isDeleted:isDeleted
+        }
+      })
     }
   }
 }

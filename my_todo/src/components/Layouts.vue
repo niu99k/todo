@@ -1,8 +1,11 @@
 <template>
-  <section class="container">
+  <section class="container" :class="{'menu-open': menuOpen}">
+    <!-- 根据menuOpen的值来判断是否使用menu-open样式 -->
     <section class="menu">
       <menus></menus>
     </section>
+    <div class="content-overlay" @click="$store.dispatch('updateMenu')"></div>
+    <!-- 这个是当页面收缩覆盖在内容上面的模糊层，点击后复原 他可以直接调用vuex actions.js里面的updateMenu方法-->
     <section class="content-container">
       <todo></todo>
     </section>
@@ -16,6 +19,11 @@ export default {
   components: {
     menus,
     todo,
+  },
+  computed: {
+    menuOpen() {
+      return this.$store.state.menuOpen;
+    }
   }
 }
 </script>

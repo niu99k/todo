@@ -11,6 +11,8 @@ export default {
   start() {
     this.selectAllMenuInfo();
     this.addOneMenuInfo();
+    this.selectAllInfoDetails();
+    this.addOneInfoDetails();
   },
   addOneMenuInfo() {
     mock.onPost('/todo/addTodo').reply(config => {
@@ -54,16 +56,43 @@ export default {
       });
     });
   },
-  selectAllDetailsInfo() {
+  selectAllInfoDetails() {
     mock.onGet('/todo/listId').reply(config => {
-      let {id} = config.params;
-      let todoDetails = Todos.find(todo=>{return id && todo.id === id});
-      todo.cout=todo.record.filter(todo=>{return todo.check()===false}).length;
+      let param = config.params;
+      let id = param.id;
+      let todoDetails = Todos.find(todo => {
+        return id && todo.id === id
+      });
+      console.log(Todos)
+      todoDetails.count = todoDetails.record.filter(todo => {
+        return todo.checked === false
+      }).length;
+
+      return new Promise(((resolve, reject) => {
+        setTimeout(() => {
+          resolve([200, {todo: todoDetails}]), 200
+        })
+      }))
     })
-    return new Promise(((resolve, reject) => {
-      setTimeout(()=>{
-        resolve([200,{todo:todo}]),200
-      })
-    }))
   },
+  addOneInfoDetails() {
+    mock.onPost('/todo/addRecord').reply(config => {
+      let {id, text} = JSON.parse(config.data)
+      Todos.some(todo => {
+        if (todo.id === id) {
+          todo.record.push({
+            text: text,
+            isDelete: false,
+            checked: false
+          })
+          return true;
+        }
+      })
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve([200]);
+        }, 200)
+      })
+    })
+  }
 }
