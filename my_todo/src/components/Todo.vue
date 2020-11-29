@@ -1,26 +1,36 @@
 <template>
-  <div class="page lists-show"><!--最外层容器-->
+  <div class="page lists-show" v-show="!isDeleted"><!--最外层容器-->
     <nav><!--容器上半部分-->
-        <div class="nav-group" @click="$store.dispatch('updateMenu')" v-show="!isUpdate">
-        <!-- 在菜单的图标下面添加updateMenu时间，他可以直接调用vuex actions.js里面的updateMenu方法 --> <!--移动端的菜单图标-->
+      <div class="form list-edit-form" v-show="isUpdate">
+        <!-- 当用户点击标题进入修改状态，就显示当前内容可以修改 -->
+        <input type="text" v-model="todo.title" @keyup.enter="updateTitle" :disabled="todo.locked">
+        <div class="nav-group right">
+          <a class="nav-item" @click="isUpdate = false">
+            <span class="icon-close">
+            </span>
+          </a>
+        </div>
+      </div>
+      <div class="nav-group" @click="$store.dispatch('updateMenu')" v-show="!isUpdate">
+        <!-- 在菜单的图标下面添加updateMenu时间，他可以直接调用vuex actions.js里面的updateMenu方法 -->
         <a class="nav-item">
           <span class="icon-list-unordered">
           </span>
         </a>
       </div>
-      <h1 class="title-page">
+      <h1 class="title-page" v-show="!isUpdate" @click="isUpdate = true">
         <span class="title-wrapper">{{ todo.title }}</span> <!-- 标题-->
         <span class="count-list">{{ todo.count }}</span><!-- 数目-->
       </h1>
-      <div class="nav-group right"><!-- 右边的删除，锁定图标容器-->
+      <div class="nav-group right" v-show="!isUpdate">
         <div class="options-web">
-          <a class=" nav-item"> <!-- 锁定图标-->
+          <a class=" nav-item" @click="onlock"> <!-- 锁定图标-->
             <span class="icon-lock" v-if="todo.locked"></span>
             <span class="icon-unlock" v-else>
             </span>
           </a>
           <a class=" nav-item"><!-- 删除图标-->
-            <span class="icon-trash">
+            <span class="icon-trash" @click="onDelete">
             </span>
           </a>
         </div>
@@ -41,20 +51,21 @@
 </template>
 <script>
 import item from './Item'
-import {detailsList, addOneTodoDetails} from "../api/api";
-import{Todos} from '@/mock/data/todoList'
+import {detailsList, addOneTodoDetails, editTodo} from "../api/api";
 
-let todoId=''
+let todoId = ''
 export default {
-  watch:{
-    "$route.params.id"(){
-      todoId=this.$route.params.id
+  watch: {
+    "$route.params.id"() {
+      todoId = this.$route.params.id
       this.initWithTodoId(todoId)
+      this.isDeleted=false
     }
   },
   created() {
-    this.initWithTodoId(Todos[0].id)
-    console.log(this.items)
+    if (todoId != '') {
+      this.initWithTodoId(todoId)
+    }
   },
   components: {
     item
@@ -62,36 +73,62 @@ export default {
   data() {
     return {
       todo: {
-        title: '星期一', // 标题
-        count: 12, // 数量
-        locked: false // 是否绑定
+        title: '', // 标题
+        count: 0, // 数量
+        locked: false ,// 是否绑定
+        isDeleted:true
       },
       items: [  // 代办单项列表
       ],
       text: '', // 用户输入单项项绑定的输入
-      isUpdate: false // 新增修改状态
+      isUpdate: false, // 新增修改状态
+      isDeleted:false
     };
   },
   methods: {
     onAdd() {
-      addOneTodoDetails({id:todoId,text:(this.text)}).then(res=>{
-        this.text=''
+      addOneTodoDetails({id: todoId, text: (this.text)}).then(res => {
+        this.text = ''
         this.initWithTodoId(todoId)
       })
     },
-    initWithTodoId(todoId){
-      const todoDetailsId=todoId;
-      detailsList({id:todoDetailsId}).then(res=>{
-        let{id,title,count,isDeleted,locked,record}=res.data.todo;
-        this.items=record
-        this.todo={
-          id:id,
-          title:title,
-          count:count,
-          locked:locked,
-          isDeleted:isDeleted
+    initWithTodoId(todoId) {
+      const todoDetailsId = todoId;
+      detailsList({id: todoDetailsId}).then(res => {
+        let {id, title, count, isDeleted, locked, record} = res.data.todo;
+        this.items = record
+        this.todo = {
+          id: id,
+          title: title,
+          count: count,
+          locked: locked,
+          isDeleted: isDeleted
         }
+        console.log(isDeleted)
       })
+    },
+    updateTodo() {
+      let _this = this;
+      editTodo({
+        todo: this.todo
+      }).then(data => {
+        _this.$store.dispatch('getTodo');
+        _this.initWithTodoId(todoId);
+      });
+    },
+    updateTitle() {
+      debugger;
+      this.updateTodo();
+      this.isUpdate = false;
+    },
+    onlock() {
+      this.todo.locked = !this.todo.locked;
+      this.updateTodo();
+    },
+    onDelete() {
+      this.todo.isDelete = true;
+      this.isDeleted=true
+      this.updateTodo();
     }
   }
 }

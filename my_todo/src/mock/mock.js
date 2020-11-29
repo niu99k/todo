@@ -13,6 +13,7 @@ export default {
     this.addOneMenuInfo();
     this.selectAllInfoDetails();
     this.addOneInfoDetails();
+    this.editTodoTile();
   },
   addOneMenuInfo() {
     mock.onPost('/todo/addTodo').reply(config => {
@@ -63,11 +64,15 @@ export default {
       let todoDetails = Todos.find(todo => {
         return id && todo.id === id
       });
-      console.log(Todos)
       todoDetails.count = todoDetails.record.filter(todo => {
         return todo.checked === false
       }).length;
 
+      if(todoDetails.isDelete){
+        todoDetails={}
+        todoDetails.count=0
+        todoDetails.locked=true
+      }
       return new Promise(((resolve, reject) => {
         setTimeout(() => {
           resolve([200, {todo: todoDetails}]), 200
@@ -94,5 +99,24 @@ export default {
         }, 200)
       })
     })
+  },
+  editTodoTile() {
+    // 修改标题
+    mock.onPost('/todo/editTodo').reply(config => {
+      let todo = JSON.parse(config.data);
+      Todos.some((t, index) => {
+        if (t.id === todo.id) {
+          t.title = todo.title;
+          t.locked = todo.locked;
+          t.isDelete = todo.isDelete;
+          return true;
+        }
+      });
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve([200]);
+        }, 200);
+      });
+    });
   }
 }
